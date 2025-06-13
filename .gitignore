@@ -103,6 +103,3 @@ desktop.ini
 *.ckpt
 *.joblib
 *.onnx
-
-data/*
-models/*
