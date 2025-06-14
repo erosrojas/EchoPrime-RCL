@@ -25,6 +25,29 @@ def crop_and_scale(img, res=(224, 224), interpolation=cv2.INTER_CUBIC, zoom=0.1)
     img = cv2.resize(img, res, interpolation=interpolation)
     return img
 
+def process_video_tensor(video_tensor, res=(224, 224), interpolation=cv2.INTER_CUBIC, zoom=0.1):
+    """
+    Apply crop_and_scale to each grayscale frame in a video tensor.
+
+    Args:
+        video_tensor (np.ndarray): shape (H, W, T), grayscale video
+        res (tuple): target resolution, e.g. (224, 224)
+
+    Returns:
+        np.ndarray: shape (res[1], res[0], T), resized frames
+    """
+    if video_tensor.ndim != 3:
+        raise ValueError(f"Expected video tensor of shape (H, W, T), got {video_tensor.shape}")
+
+    processed_frames = []
+
+    for t in range(video_tensor.shape[2]):
+        frame = video_tensor[:, :, t]  # Extract 2D grayscale frame
+        frame = crop_and_scale(frame, res=res, interpolation=interpolation, zoom=zoom)
+        processed_frames.append(frame)
+
+    return np.stack(processed_frames, axis=2)
+
 def process_video_path(path):
     frames_to_take = 32
     frame_stride = 2
@@ -35,7 +58,7 @@ def process_video_path(path):
 
     mat_data = scipy.io.loadmat(path)
     volume = np.array(mat_data['cropped'])
-    volume = crop_and_scale(volume)
+    volume = process_video_tensor(volume)
     volume = np.repeat(volume[..., None], 3, axis=3)
     volume = np.transpose(volume, (3, 2, 0, 1))
     x = torch.as_tensor(volume, dtype=torch.float)

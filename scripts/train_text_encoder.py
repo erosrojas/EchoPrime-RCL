@@ -37,7 +37,7 @@ def main(args):
 
     DEVICE = torch.device(f'cuda:{CUDA_DEVICE}' if torch.cuda.is_available() else 'cpu')
 
-    df = pd.read_csv('../data/bahar_data_1.csv', low_memory=False)
+    df = pd.read_csv('data/bahar_data_1.csv', low_memory=False)
     process_dataframe(df, inplace=True, verbose=True)
 
     df_train, df_val, _ = split_data(df, TRAIN_FRAC, VAL_FRAC, verbose=True)
@@ -78,7 +78,7 @@ def main(args):
         text_encoder.train()
         total_train_loss = 0
 
-        for batch in batch_generator(df_train, tokenizer):
+        for batch in batch_generator(df_train, tokenizer, BATCH_SIZE):
             video_tensor, input_ids, attention_mask = batch
 
             video_tensor = video_tensor.to(DEVICE)
@@ -108,7 +108,7 @@ def main(args):
         total_val_loss = 0
 
         with torch.no_grad():
-            for batch in batch_generator(df_val, tokenizer):   
+            for batch in batch_generator(df_val, tokenizer, BATCH_SIZE):   
                 video_tensor, input_ids, attention_mask = batch
                 
                 video_tensor = video_tensor.to(DEVICE)
@@ -144,9 +144,9 @@ if __name__ == "__main__":
     parser.add_argument('--weight_decay', type=float, default=1e-6, help='Weight decay for optimizer')
     parser.add_argument('--num_epochs', type=int, default=60, help='Number of training epochs')
     parser.add_argument('--cuda_device', type=int, default=1, help='CUDA device ID to use')
-    parser.add_argument('--batch_size', type=int, default=32, help='Batch size')
-    parser.add_argument('--save_path', type=str, default="../models/best_text_encoder.pth", help='Path to save the best model')
-    parser.add_argument('--models_path', type=str, default="../models", help="Path to models")
+    parser.add_argument('--batch_size', type=int, default=16, help='Batch size')
+    parser.add_argument('--save_path', type=str, default="models/best_text_encoder.pth", help='Path to save the best model')
+    parser.add_argument('--models_path', type=str, default="models", help="Path to models")
     parser.add_argument('--train_frac', type=float, default= 39/40, help='Training fraction of the data')
     parser.add_argument('--val_frac', type=float, default=1/400, help='Validation fraction of the data')
     parser.add_argument('--text_model_name', type=str, default="microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract", help='Text encoder model name')
